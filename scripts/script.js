@@ -7,6 +7,7 @@
 //Color constructor is used to store RGB values which can be retrieved and set with set/get methods
 //Color constructor can alter the values with addToColor() and subtractToColor() for single incremental change
 //getHexCodes() methods returns the current rgb values in a hexadecimal format string
+//setCycleSpeed() method alters the speed at which the rainbow cycles
 //Cycle is used by cycleColors() and represents the current transition the colors are undergoing. 
     //0 = Red to Yellow
     //1 = Yellow to Green
@@ -19,7 +20,8 @@ function ColorConstructor(r,g,b,c){
     this.green=g;
     this.blue=b;
     this.cycle=c;
-    
+
+    //GET METHODS
     this.getRed = function(){
         return this.red;
     }
@@ -32,6 +34,10 @@ function ColorConstructor(r,g,b,c){
     this.getCycle = function(){
         return this.cycle;
     }
+    this.getCycleSpeed = function(){
+        return this.cycleSpeed;
+    }
+    //SET METHODS
     this.setRed = function(x){
         this.red = x;
     }
@@ -44,20 +50,27 @@ function ColorConstructor(r,g,b,c){
     this.setCycle = function(x){
         this.cycle = x;
     }
+    this.setCycleSpeed = function(x){
+        this.cycleSpeed = x
+    }
+
+    //INCREMENT/DECREMENT METHODS
     this.addToColor = function(color){
-        if(this[color]<256){
-            this[color]+=1;
+        if(this[color]<256-(this.cycleSpeed)){
+            this[color]+=this.cycleSpeed;
         }
         else{
-            console.log(color+ "exceeded limit");
+            this[color] = 255;
+            console.log(color+ " reached positive limit");
         }
     }
     this.subtractToColor = function(color){
-        if(this[color]>0){
-            this[color]-=1;
+        if(this[color]>0+(this.cycleSpeed)){
+            this[color]-=this.cycleSpeed;
         }
         else{
-            console.log(color+" can't have negative value");
+            this[color]=0;
+            console.log(color+" reached negative limit");
         }
     }
     this.getHexCodes = function(){
@@ -84,9 +97,6 @@ function getDate(){
     if(date.getHours()<10){
         currentTime += "0"
     }
-    else{
-        console.log("you don't have to format the date this way")
-    }
     currentTime += date.getHours() + ":"
     if(date.getMinutes()<10){
         currentTime += "0"
@@ -98,14 +108,16 @@ function getDate(){
     currentTime += date.getSeconds()
     return currentTime
 }
-
 //Translates the current time into a color and color transition which is stored in a ColorConstructor as colorValues
 //This function is made to ensure a color cycle stays consistent when a user refreshes the page.
 //The value currentTimeInSeconds is the elapsed amount of seconds past since 00:00 or 12:00AM
 //Cycle Remainder tells you how far into a current cycle the time is in.
 //singleCycle represents a single color transition phase
-function setCurrentColorValues(currentTimeInSeconds){
-    var cycleRemainder = (currentTimeInSeconds/1530)%1;
+function setCurrentColorValues(colorValues){
+    var dateVar = new Date();
+    var currentTimeInSeconds= dateVar.getHours()*3600+dateVar.getMinutes()*60+dateVar.getSeconds()
+
+    var cycleRemainder = (currentTimeInSeconds*colorValues.getCycleSpeed()/1530)%1;
     var singleCycle = (255/1530);
 
     //Red to Yellow
@@ -148,4 +160,139 @@ function setCurrentColorValues(currentTimeInSeconds){
         console.log('error in setCurrentColorValues')
     }
 }
+//cycleColor takes the cycle value from the color constructor and runs the corresponding color transition from that value.
+//a color transition cycles through the colors of the rainbow
+//cycleColor will change the cycle value if the current color transition has finished and will move seamlessly to the next transition
+function cycleColor(colorCycleNum){
+    switch(colorCycleNum){
+        //Red to Yellow
+        case 0:
+            if(colorValues.getGreen()<255){
+                colorValues.addToColor('green')
+            }
+            else{
+                colorValues.subtractToColor('red')
+                colorValues.setCycle(1)
+            }
+            break;
+        //Yellow to Green
+        case 1:
+            if(colorValues.getRed()>0){
+                colorValues.subtractToColor('red')
+            }
+            else{
+                colorValues.addToColor('green')
+                colorValues.setCycle(2)
+            }
+            break;
+        //Green to Cyan
+        case 2:
+            if(colorValues.getBlue()<255){
+                colorValues.addToColor('blue')
+            }
+            else{
+                colorValues.subtractToColor('green')
+                colorValues.setCycle(3)
+            }
+            break;
+        //Cyan to Blue
+        case 3:
+            if(colorValues.getGreen()>0){
+                colorValues.subtractToColor('green')
+            }
+            else{
+                colorValues.addToColor('red')
+                colorValues.setCycle(4)
+            }
+            break;
+        //Blue to Magenta
+        case 4:
+            if(colorValues.getRed()<255){
+                colorValues.addToColor('red')
+            }
+            else{
+                colorValues.subtractToColor('blue')
+                colorValues.setCycle(5)
+            }
+            break;
+        //Magenta to Red
+        case 5:
+            if(colorValues.getBlue()>0){
+                colorValues.subtractToColor('blue')
+            }
+            else{
+                colorValues.addToColor('green')
+                colorValues.setCycle(0)
+            }
+            break;
+        //Error message
+        default:
+            console.log("uh oh spaghetti-os: problem in cycleColor")
+            break;
+    }
+}
+
+//Display functions alter their corresponding html tags
+function displayDate(displayNode){
+    hexNode.innerHTML = ''
+    timeNode.innerHTML = getDate()
+} 
+function displayHex(displayNode){
+    timeNode.innerHTML = ''
+    hexNode.innerHTML = colorValues.getHexCodes()
+}
+function displayBackground(bgNode){
+    bgNode.style.background = colorValues.getHexCodes()
+}
+
+// function displayLoadAnimation(date){
+//     date.setAttribute('data-text', date)
+// }
+
+
+var colorValues = new ColorConstructor(0,0,0,0)
+
+
+function main(){
+    var containerNode = document.querySelector('#textContainer')
+        timeNode = document.querySelector('#time'),
+        hexNode = document.querySelector('#hex')
+        bgNode = document.querySelector('#background')
+        hoverState = {hover:false}
+    
+    colorValues.setCycleSpeed(15)
+    setCurrentColorValues(colorValues)
+    //These need to be declared so that the page doesn't start out on a blank screen
+    displayDate(timeNode)
+    displayBackground(bgNode)
+
+    containerNode.addEventListener('mouseover' , function(){
+            var timer = setTimeout(function(){hoverState.hover = true},500); //sets true if hovered for 400ms
+            containerNode.onmouseleave = function() {  clearTimeout(timer); } //remove timer        
+    })
+    containerNode.addEventListener('mouseleave', function(){
+            var timer = setTimeout(function(){hoverState.hover = false},500); //sets false if left for 400ms
+            containerNode.onmouseover = function() {  clearTimeout(timer); } //remove timer
+    })
+
+    function updatePage(){
+        setInterval(function(){
+            displayBackground(bgNode)
+            if(hoverState.hover){
+                displayHex(hexNode)
+            }
+            else{
+                displayDate(timeNode)
+            }
+        },50)
+
+        setInterval(function(){
+            cycleColor(colorValues.getCycle())
+        },1000)
+
+    }
+    updatePage()
+}
+
+main()
 
