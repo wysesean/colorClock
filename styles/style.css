@@ -27,28 +27,31 @@
 
 #textContainer{
 	padding: 0;
-	border: 10%;
+	border: 0;
+	margin:0;
 	top: 50%;
 	left: 50%;
 	transition: transform 1s linear;
 }
 
 p{
+
 	text-align: center;
 	font-family: 'VT323', monospace;
 	font-size: 25vh;
 	font-weight: bold;
-	background: -webkit-linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.4));
- 		-webkit-background-clip: text;
-  		-webkit-text-fill-color: transparent;
-	transition: transform 1s linear;
+/*	-webkit-text-stroke: 1px rgba(0,0,0,.1);
+*/
+}
+#hex{
+	color: rgba(0,0,0,.5);
 }
 
 #textContainer:hover{
 	transform: rotateX(180deg);
 }
 
-#textContainer:hover #hex{
+#textContainer #hex{
 	transform: rotateX(-180deg);
 }
 /*#textContainer:hover #hex{

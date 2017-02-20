@@ -244,7 +244,21 @@ function displayHex(displayNode){
 function displayBackground(bgNode){
     bgNode.style.background = colorValues.getHexCodes()
 }
+function displayMinuteAnimation(timeNode){
+    var date = new Date()
+    var percent = Math.round(date.getSeconds())
+    var clientHeight = document.getElementById('textContainer').clientHeight;
 
+    //this is done because making font-size a vh unit adds extra content space to the top and bottom, 
+    //and the gradient will start at the content of the page rather than the bottom of the text
+    //the first parenthesis equation turns the 60 second scale into a 100%-like scale, 29 adds 29% to the gradient
+    //which is the default bottom "content padding", the cycle scale is then changed to cycle to the top of the letters
+    percent = ((percent*5/3)+29)*(6/10)
+
+    timeNode.style.background = "-webkit-linear-gradient(bottom, rgba(0,0,0,.5) 0%,rgba(0,0,0,.5)" + (percent+1)+ "% ,rgba(50,50,50,.5)" + percent + "%,rgba(50,50,50,.5) 100%)"; 
+    timeNode.style['-webkit-background-clip'] = "text"
+    timeNode.style['-webkit-text-fill-color'] = "transparent"
+}
 // function displayLoadAnimation(date){
 //     date.setAttribute('data-text', date)
 // }
@@ -255,9 +269,10 @@ var colorValues = new ColorConstructor(0,0,0,0)
 
 function main(){
     var containerNode = document.querySelector('#textContainer')
-        timeNode = document.querySelector('#time'),
+        timeNode = document.querySelector('#time')
         hexNode = document.querySelector('#hex')
         bgNode = document.querySelector('#background')
+        pNode = document.querySelector('p')
         hoverState = {hover:false}
     
     colorValues.setCycleSpeed(15)
@@ -266,23 +281,27 @@ function main(){
     displayDate(timeNode)
     displayBackground(bgNode)
 
-    containerNode.addEventListener('mouseover' , function(){
-            var timer = setTimeout(function(){hoverState.hover = true},500); //sets true if hovered for 400ms
-            containerNode.onmouseleave = function() {  clearTimeout(timer); } //remove timer        
+    //If mouse over the text container for 500ms, set hover to hoverstate to true
+    containerNode.addEventListener('mouseenter' , function(){
+        var timer = setTimeout(function(){hoverState.hover = true},500); //sets true if hovered for 400ms
+        containerNode.onmouseleave = function() {  clearTimeout(timer); } //remove timer        
     })
+
+    //if mouse has left text container for 500ms, set hover state to false
     containerNode.addEventListener('mouseleave', function(){
-            var timer = setTimeout(function(){hoverState.hover = false},500); //sets false if left for 400ms
-            containerNode.onmouseover = function() {  clearTimeout(timer); } //remove timer
+        var timer = setTimeout(function(){hoverState.hover = false},500); //sets false if left for 400ms
+        containerNode.onmouseenter = function() {  clearTimeout(timer); } //remove timer
     })
 
     function updatePage(){
         setInterval(function(){
             displayBackground(bgNode)
-            if(hoverState.hover){
-                displayHex(hexNode)
+            displayMinuteAnimation(timeNode)
+            if(!hoverState.hover){
+                displayDate(timeNode)
             }
             else{
-                displayDate(timeNode)
+                displayHex(hexNode)
             }
         },50)
 
